@@ -1,7 +1,8 @@
+package at.fhtw.chatprogramm;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-
+//Clientklasse
 public class Client {
     static Socket client;
 
