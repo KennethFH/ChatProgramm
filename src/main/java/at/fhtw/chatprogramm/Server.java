@@ -20,11 +20,13 @@ public class Server implements Runnable, SocketAcceptedEvent {
     List<OutputStream> outputStreams = new ArrayList<>();
     List<InputStream> inputStreams = new ArrayList<>();
     private boolean isRunning = true;
+    private final int buffersize;
 
     public Server(int buffersize) throws IOException {
         connectionHandler = new ConnectionHandler(new ServerSocket(4711));
         connectionHandler.addSocketAcceptedEventListener(this);
         new Thread(connectionHandler).start();
+        this.buffersize = buffersize;
         readBuffer = new byte[buffersize];
         prepareStage();
         serverStage.setOnCloseRequest(e -> {
@@ -48,6 +50,7 @@ public class Server implements Runnable, SocketAcceptedEvent {
         {
             try {
                 for (InputStream inputStream : inputStreams) {
+                    readBuffer = new byte[buffersize];
                     if (inputStream.read(readBuffer) != -1){
                         for (OutputStream outputStream : outputStreams) {
                             outputStream.write(readBuffer);
