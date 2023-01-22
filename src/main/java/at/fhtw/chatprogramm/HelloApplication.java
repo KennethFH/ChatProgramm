@@ -5,10 +5,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 public class HelloApplication extends Application {
 
@@ -25,34 +28,26 @@ public class HelloApplication extends Application {
         hostButton.setPrefWidth(200);
         vbox.getChildren().addAll(connectButton, hostButton);
 
-        connectButton.setOnAction(e -> {
-            Stage clientStage = new Stage();
-            VBox testbox = new VBox();
-            Scene scene = new Scene(testbox, 600, 400);
-            clientStage.setTitle("Client Application");
-            clientStage.setScene(scene);
-            clientStage.show();
-            Client c = new Client();
-            Thread t = new Thread(c);
-            t.start();
-        });
+        //Connect Button will start a client
+        connectButton.setOnAction(e -> startClientWithInterface("localhost", 4711));
 
-        hostButton.setOnAction(e -> {
-            Stage serverStage = new Stage();
-            VBox testbox = new VBox();
-            Scene scene = new Scene(testbox, 600, 400);
-            serverStage.setTitle("Server Application");
-            serverStage.setScene(scene);
-            serverStage.show();
-            Server s = new Server();
-            Thread t = new Thread(s);
-            t.start();
-        });
+        //Host Button will start the server
+        hostButton.setOnAction(e -> new Thread(new Server()).start());
 
         Scene scene = new Scene(vbox, 600, 400);
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void startClientWithInterface(String address, int port) {
+        Client client;
+        try {
+            client = new Client(address, port, 100);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        new Thread(client).start();
     }
 
     public static void main(String[] args) {
