@@ -60,7 +60,7 @@ public class HelloApplication extends Application {
         //Connect Button will start a client
         connectButton.setOnAction(e -> {
             if (!ipport.getText().isEmpty() && !nickname.getText().isEmpty()){
-                String[] ipp = ipport.getText().split(":", 1);
+                String[] ipp = ipport.getText().split(":", 2);
                 startClientWithInterface(ipp[0], ipp.length < 2 ? 4711 : Integer.parseInt(ipp[1]), nickname.getText(), buffersize);
             }
         });
