@@ -3,10 +3,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 //Clientklasse
-public class Client {
+public class Client implements Runnable{
     static Socket client;
 
-    void start()
+    @Override
+    public void run()
     {
         try
         {

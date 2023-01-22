@@ -1,12 +1,16 @@
 package at.fhtw.chatprogramm;
+import javafx.application.Application;
+import javafx.stage.Stage;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 //Serverklasse
-public class Server {
+public class Server implements Runnable {
 
-    public void start(){
+    @Override
+    public void run(){
         ServerSocket socket;
         Socket client;
         try {
