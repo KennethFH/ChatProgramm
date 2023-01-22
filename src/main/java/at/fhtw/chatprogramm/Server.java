@@ -1,63 +1,72 @@
 package at.fhtw.chatprogramm;
-import javafx.application.Application;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 //Serverklasse
-public class Server implements Runnable {
+public class Server implements Runnable, SocketAcceptedEvent {
+
+    private byte[] readBuffer;
+    private final Stage serverStage = new Stage();
+    private final ConnectionHandler connectionHandler;
+    List<Socket> clients = new ArrayList<>();
+    List<OutputStream> outputStreams = new ArrayList<>();
+    List<InputStream> inputStreams = new ArrayList<>();
+    private boolean isRunning = true;
+
+    public Server(int buffersize) throws IOException {
+        connectionHandler = new ConnectionHandler(new ServerSocket(4711));
+        connectionHandler.addSocketAcceptedEventListener(this);
+        new Thread(connectionHandler).start();
+        readBuffer = new byte[buffersize];
+        prepareStage();
+        serverStage.setOnCloseRequest(e -> {
+            try {
+                isRunning = false;
+                connectionHandler.getSocket().close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+    }
+
+    private void prepareStage(){
+
+    }
 
     @Override
     public void run(){
-        ServerSocket socket;
-        Socket client;
-        try {
-            socket = new ServerSocket(4711);
-            System.out.println("Server: waiting for connection");
-            client = socket.accept();
-            while (true)
-            {
-                InputStream eingang;
-                try
-                {
-                    eingang = client.getInputStream();
-                }
-                catch(Exception e2)
-                {
-                    e2.printStackTrace();
-                    break;
-                }
-                byte[]      buf     = new byte[100];
-                try
-                {
-                    eingang.read(buf);
-                }
-                catch(Exception e2)
-                {
-                    e2.printStackTrace();
-                    break;
-                }
-                String nachricht = new String(buf);
-                String Nachricht = "ACK";
-                byte[] abuf = Nachricht.getBytes();
-                OutputStream ack = client.getOutputStream();
-                ack.write(abuf);
-                OutputStream loop = client.getOutputStream();
-                loop.write(buf);
-                System.out.println("Nachricht: " +  nachricht);
-                System.out.println("Von: " + client.getInetAddress() + ": " + client.getPort());
-                if(buf[0] == 't' && buf[1] == 's' && buf[2] == 'c' && buf[3] == 'h' && buf[4] == 'a' && buf[5] == 'u')
-                {
-                    break;
-                }
-            }
-        }
-        catch (Exception e)
+        System.out.println("Server: waiting for connection");
+        while (isRunning)
         {
-            e.printStackTrace();
+            try {
+                for (InputStream inputStream : inputStreams) {
+                    if (inputStream.read(readBuffer) != -1){
+                        for (OutputStream outputStream : outputStreams) {
+                            outputStream.write(readBuffer);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
+    @Override
+    public void onSocketAccepted(Socket client) throws IOException {
+        for (OutputStream outputStream : outputStreams) {
+            outputStream.write("A new Client has connected!".getBytes(StandardCharsets.UTF_8));
+        }
+        clients.add(client);
+        inputStreams.add(client.getInputStream());
+        outputStreams.add(client.getOutputStream());
+    }
 }

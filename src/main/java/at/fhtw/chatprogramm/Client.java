@@ -16,6 +16,8 @@ import java.util.Arrays;
 
 //Clientklasse
 public class Client extends Socket implements Runnable{
+
+    private final String nickname;
     private final OutputStream outputStream;
     private final InputStream inputStream;
     private byte[] readBuffer;
@@ -26,9 +28,11 @@ public class Client extends Socket implements Runnable{
     private final TextField messageField = new TextField();
     private final TextArea chatArea = new TextArea();
     private final Button sendButton = new Button("send");
+    private boolean isRunning = true;
 
-    public Client(String host, int port, int buffersize) throws IOException {
+    public Client(String host, int port, String nickname, int buffersize) throws IOException {
         super(host, port);
+        this.nickname = nickname;
         outputStream = this.getOutputStream();
         inputStream = this.getInputStream();
         readBuffer = new byte[buffersize];
@@ -37,6 +41,7 @@ public class Client extends Socket implements Runnable{
         clientStage.setOnCloseRequest(e -> {
             try {
                 sendMessage("Verlasse den Chat");
+                isRunning = false;
                 this.close();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -59,7 +64,8 @@ public class Client extends Socket implements Runnable{
         sendButton.setOnAction(event -> {
             if (this.isConnected()){
                 try {
-                    sendMessage("test");
+                    sendMessage(messageField.getText());
+                    messageField.clear();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -70,10 +76,12 @@ public class Client extends Socket implements Runnable{
     @Override
     public void run()
     {
-        try {
-            pollForMessages();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        while (isRunning){
+            try {
+                pollForMessages();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -84,29 +92,7 @@ public class Client extends Socket implements Runnable{
 
     private void pollForMessages() throws IOException {
         if (inputStream.read(readBuffer) != -1){
-            chatArea.appendText(new String(readBuffer, StandardCharsets.UTF_8));
+            chatArea.appendText(new String(readBuffer, StandardCharsets.UTF_8) + "\n");
         }
     }
-
-    /*void clientloop()
-    {
-        try
-        {
-            OutputStream stream  = client.getOutputStream();
-            String       message = "Hallo";
-            byte[]         buf    = message.getBytes();
-            stream.write(buf);
-            byte[] abuf = new byte[100];
-            InputStream in = client.getInputStream();
-            in.read(abuf);
-            byte[] loop = new byte[100];
-            InputStream loopback = client.getInputStream();
-            loopback.read(loop);
-            System.out.println("Nachricht: " + new String(abuf, 0, abuf.length) + "\nHier ist der Loopback " + new String(loop, 0, loop.length));
-        }
-        catch(Exception e2)
-        {
-            e2.printStackTrace();
-        }
-    }*/
 }
