@@ -15,8 +15,28 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.UnknownHostException;
 
+/**
+ * Die Hauptklasse mit dem Hauptthread in dem die Nebenthreads erstellt
+ * werden für Clients und den Server
+ * @see Client
+ * @see Server
+ */
 public class HelloApplication extends Application {
 
+
+    /**
+     * Constructor von HelloApplication, damit auch der Constructor von HelloApplication einen Kommentar hat und Javadocs ruhe gibt!
+     */
+    HelloApplication()
+    {}
+    /**
+     * Das Fenster für die Server/Clientwahl wird eingestellt, wo welcher Knopf, welches Textfeld liegt
+     * und was beim Drücken eines Knopfes passiert.
+     * @param stage the primary stage for this application, onto which
+     *              the application scene can be set.
+     *              Applications may create other stages, if needed, but they will not be
+     *              primary stages.
+     */
     @Override
     public void start(Stage stage) {
         Text client = new Text("Client");
@@ -80,6 +100,14 @@ public class HelloApplication extends Application {
         stage.show();
     }
 
+    /**
+     * Es wird ein Client erstellt
+     * @param address Die Addresse mit der man sich verbinden möchte
+     * @param port  Der Port mit dem man sich verbinden möchte
+     * @param nickname Der eigene Name
+     * @param buffersize Die größe der größten zu sendenden Nachricht.
+     * @see Client
+     */
     private void startClientWithInterface(String address, int port, String nickname, int buffersize) {
         Client client;
         try {
@@ -90,6 +118,11 @@ public class HelloApplication extends Application {
         new Thread(client).start();
     }
 
+    /**
+     * Es wird alles gestartet.
+     * @param args Parameter die an das Programm übergeben werden. (Werden hier nicht benötigt)
+     * @see HelloApplication
+     */
     public static void main(String[] args) {
         launch();
     }

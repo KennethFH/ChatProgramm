@@ -10,18 +10,51 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-//Serverklasse
+/**
+ * Klasse für den Server
+ * @see ConnectionHandler
+ * @see SocketAcceptedEvent
+ */
 public class Server implements Runnable, SocketAcceptedEvent {
 
+    /**
+     * Speicher für eingehende Nachrichten
+     */
     private byte[] readBuffer;
+    /**
+     * Fenster, des Servers
+     */
     private final Stage serverStage = new Stage();
+    /**
+     * schaut dauerhaft ob sich neue Clients verbinden
+     */
     private final ConnectionHandler connectionHandler;
+    /**
+     * schon verbundene Clients
+     */
     List<Socket> clients = new ArrayList<>();
+    /**
+     * Nachrichten zum Senden an die Clients
+     */
     List<OutputStream> outputStreams = new ArrayList<>();
+    /**
+     * Nachrichten zum lesen von den Clients
+     */
     List<InputStream> inputStreams = new ArrayList<>();
+    /**
+     * Ein-/Ausgeschalten
+     */
     private boolean isRunning = true;
+    /**
+     * größte Größe der größten Nachricht
+     */
     private final int buffersize;
 
+    /**
+     * der Server wird hergerichtet
+     * @param buffersize größte Größe der größten Nachricht
+     * @throws IOException falls beim lesen/schreiben was schiefläuft
+     */
     public Server(int buffersize) throws IOException {
         connectionHandler = new ConnectionHandler(new ServerSocket(4711));
         connectionHandler.addSocketAcceptedEventListener(this);
@@ -40,10 +73,16 @@ public class Server implements Runnable, SocketAcceptedEvent {
         });
     }
 
+    /**
+     * Das Fenster für den Server wird hergerichtet
+     */
     private void prepareStage(){
 
     }
 
+    /**
+     * Endlosschleife. Wenn etwas geschrieben wird, wird es an alle anderen Clients verteilt
+     */
     @Override
     public void run(){
         while (isRunning)
@@ -63,6 +102,11 @@ public class Server implements Runnable, SocketAcceptedEvent {
         }
     }
 
+    /**
+     * Fügt Clients hinzu
+     * @param client der Client der sich neuverbunden hat
+     * @throws IOException falls etwas schiefläuft
+     */
     @Override
     public void onSocketAccepted(Socket client) throws IOException {
         /*for (OutputStream outputStream : outputStreams) {

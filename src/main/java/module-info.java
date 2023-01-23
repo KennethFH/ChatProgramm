@@ -1,3 +1,6 @@
+/**
+ * Packet für das Chatprogramm
+ */
 module at.fhtw.chatprogramm {
     requires javafx.controls;
     requires javafx.fxml;
