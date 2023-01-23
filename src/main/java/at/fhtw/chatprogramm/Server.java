@@ -32,6 +32,7 @@ public class Server implements Runnable, SocketAcceptedEvent {
         serverStage.setOnCloseRequest(e -> {
             try {
                 isRunning = false;
+                connectionHandler.setRunning(false);
                 connectionHandler.getSocket().close();
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -45,15 +46,14 @@ public class Server implements Runnable, SocketAcceptedEvent {
 
     @Override
     public void run(){
-        System.out.println("Server: waiting for connection");
         while (isRunning)
         {
             try {
-                for (InputStream inputStream : inputStreams) {
+                for (int i = 0; i < inputStreams.size(); i++){
                     readBuffer = new byte[buffersize];
-                    if (inputStream.read(readBuffer) != -1){
-                        for (OutputStream outputStream : outputStreams) {
-                            outputStream.write(readBuffer);
+                    if (inputStreams.get(i).available() > 0 && inputStreams.get(i).read(readBuffer) > 0){
+                        for (int o = 0; o < outputStreams.size(); o++){
+                            outputStreams.get(o).write(readBuffer);
                         }
                     }
                 }
@@ -65,9 +65,9 @@ public class Server implements Runnable, SocketAcceptedEvent {
 
     @Override
     public void onSocketAccepted(Socket client) throws IOException {
-        for (OutputStream outputStream : outputStreams) {
+        /*for (OutputStream outputStream : outputStreams) {
             outputStream.write("A new Client has connected!".getBytes(StandardCharsets.UTF_8));
-        }
+        }*/
         clients.add(client);
         inputStreams.add(client.getInputStream());
         outputStreams.add(client.getOutputStream());

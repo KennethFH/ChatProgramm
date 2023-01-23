@@ -10,10 +10,15 @@ public class ConnectionHandler implements Runnable {
 
     private final ServerSocket socket;
     private List<SocketAcceptedEvent> listeners;
+    private boolean isRunning = true;
 
     public ConnectionHandler(ServerSocket socket){
         this.socket = socket;
         listeners = new ArrayList<>();
+    }
+
+    public void setRunning(boolean running) {
+        isRunning = running;
     }
 
     public void addSocketAcceptedEventListener(SocketAcceptedEvent e){
@@ -25,18 +30,19 @@ public class ConnectionHandler implements Runnable {
     }
     @Override
     public void run() {
-        Socket s;
-        try {
-            s = socket.accept();
-            if (s == null){
-                return;
+        while (isRunning){
+            Socket s;
+            try {
+                s = socket.accept();
+                if (s == null){
+                    return;
+                }
+                for (SocketAcceptedEvent e : listeners) {
+                    e.onSocketAccepted(s);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            for (SocketAcceptedEvent e : listeners) {
-                e.onSocketAccepted(s);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-
     }
 }

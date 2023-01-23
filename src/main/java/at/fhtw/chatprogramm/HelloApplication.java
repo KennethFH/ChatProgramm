@@ -57,7 +57,7 @@ public class HelloApplication extends Application {
         hbox.setSpacing(12);
         int buffersize = 100;
 
-        //Connect Button will start a client
+        //Connect Button will start the client
         connectButton.setOnAction(e -> {
             if (!ipport.getText().isEmpty() && !nickname.getText().isEmpty()){
                 String[] ipp = ipport.getText().split(":", 2);

@@ -78,7 +78,7 @@ public class Client extends Socket implements Runnable{
     {
         while (isRunning){
             try {
-                pollForMessages();
+                checkForMessages();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -90,8 +90,8 @@ public class Client extends Socket implements Runnable{
         outputStream.write(writeBuffer);
     }
 
-    private void pollForMessages() throws IOException {
-        if (inputStream.read(readBuffer) != -1){
+    private void checkForMessages() throws IOException {
+        if (inputStream.read(readBuffer) > 0){
             chatArea.appendText(new String(readBuffer, StandardCharsets.UTF_8) + "\n");
         }
     }
