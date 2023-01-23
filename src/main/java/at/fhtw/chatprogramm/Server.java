@@ -1,4 +1,7 @@
 package at.fhtw.chatprogramm;
+import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -15,10 +18,9 @@ public class Server implements Runnable, SocketAcceptedEvent {
 
     private byte[] readBuffer;
     private final Stage serverStage = new Stage();
+    private final TextArea console = new TextArea();
     private final ConnectionHandler connectionHandler;
     List<Socket> clients = new ArrayList<>();
-    List<OutputStream> outputStreams = new ArrayList<>();
-    List<InputStream> inputStreams = new ArrayList<>();
     private boolean isRunning = true;
     private final int buffersize;
 
@@ -41,35 +43,40 @@ public class Server implements Runnable, SocketAcceptedEvent {
     }
 
     private void prepareStage(){
-
+        Scene scene = new Scene(console, 600,400);
+        serverStage.setTitle("ChatProgramm - Server");
+        serverStage.setScene(scene);
+        serverStage.show();
     }
 
     @Override
     public void run(){
         while (isRunning)
         {
-            try {
-                for (int i = 0; i < inputStreams.size(); i++){
-                    readBuffer = new byte[buffersize];
-                    if (inputStreams.get(i).available() > 0 && inputStreams.get(i).read(readBuffer) > 0){
-                        for (int o = 0; o < outputStreams.size(); o++){
-                            outputStreams.get(o).write(readBuffer);
+            for (int i = 0; i < clients.size(); i++){
+                System.out.println("TEST");
+                readBuffer = new byte[buffersize];
+                try {
+                    if (clients.get(i).getInputStream().available() > 0 && clients.get(i).getInputStream().read(readBuffer) > 0){
+                        for (int o = 0; o < clients.size(); o++){
+                            clients.get(o).getOutputStream().write(readBuffer);
                         }
                     }
+                } catch (IOException e) {
+                    console.appendText("" + clients.size() + "\n");
+                    console.appendText(e.getMessage() + "\n");
+                    throw new RuntimeException(e);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
     }
 
     @Override
     public void onSocketAccepted(Socket client) throws IOException {
-        /*for (OutputStream outputStream : outputStreams) {
-            outputStream.write("A new Client has connected!".getBytes(StandardCharsets.UTF_8));
-        }*/
+        for (int o = 0; o < clients.size(); o++){
+            clients.get(o).getOutputStream().write(("A new Client has connected! Clients: " + clients.size()+1).getBytes(StandardCharsets.UTF_8));
+        }
         clients.add(client);
-        inputStreams.add(client.getInputStream());
-        outputStreams.add(client.getOutputStream());
+        console.appendText(client.getLocalAddress() + " connected! Clients: " + clients.size() + "\n");
     }
 }

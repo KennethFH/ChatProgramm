@@ -3,6 +3,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -18,8 +19,6 @@ import java.util.Arrays;
 public class Client extends Socket implements Runnable{
 
     private final String nickname;
-    private final OutputStream outputStream;
-    private final InputStream inputStream;
     private byte[] readBuffer;
     private byte[] writeBuffer;
     private final Stage clientStage = new Stage();
@@ -33,14 +32,12 @@ public class Client extends Socket implements Runnable{
     public Client(String host, int port, String nickname, int buffersize) throws IOException {
         super(host, port);
         this.nickname = nickname;
-        outputStream = this.getOutputStream();
-        inputStream = this.getInputStream();
         readBuffer = new byte[buffersize];
         writeBuffer = new byte[buffersize];
         prepareStage();
         clientStage.setOnCloseRequest(e -> {
             try {
-                sendMessage("Verlasse den Chat");
+                sendMessage(nickname + " disconnected.");
                 isRunning = false;
                 this.close();
             } catch (IOException ex) {
@@ -50,24 +47,35 @@ public class Client extends Socket implements Runnable{
     }
 
     private void prepareStage(){
-        double width = 300;
-        double height = 200;
+        double width = 600;
+        double height = 400;
         sendButton.setPrefWidth(60);
-        messageField.setPrefWidth(width -60);
+        messageField.setPrefWidth(width - 60);
         innerHBox.getChildren().addAll(messageField, sendButton);
         outerVBox.getChildren().addAll(innerHBox, chatArea);
         Scene scene = new Scene(outerVBox, width, height);
-        clientStage.setTitle("ChatProgramm - Titel");
+        clientStage.setTitle("ChatProgramm - Client");
         clientStage.setScene(scene);
         clientStage.show();
 
         sendButton.setOnAction(event -> {
             if (this.isConnected()){
                 try {
-                    sendMessage(messageField.getText());
+                    sendMessageWithPrefix(messageField.getText());
                     messageField.clear();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+                }
+            }
+        });
+
+        scene.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER && this.isConnected()) {
+                try {
+                    sendMessageWithPrefix(messageField.getText());
+                    messageField.clear();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         });
@@ -78,7 +86,9 @@ public class Client extends Socket implements Runnable{
     {
         while (isRunning){
             try {
-                checkForMessages();
+                if (this.isConnected()){
+                    checkForMessages();
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -86,12 +96,19 @@ public class Client extends Socket implements Runnable{
     }
 
     private void sendMessage(String msg) throws IOException {
-        writeBuffer = msg.getBytes();
-        outputStream.write(writeBuffer);
+        String test = msg.replaceAll("\n", "").replaceAll("\r", "").strip();
+        writeBuffer = test.getBytes(StandardCharsets.UTF_8);
+        getOutputStream().write(writeBuffer);
+    }
+
+    private void sendMessageWithPrefix(String msg) throws IOException {
+        if (!msg.isBlank()){
+            sendMessage(nickname + ": " + msg);
+        }
     }
 
     private void checkForMessages() throws IOException {
-        if (inputStream.read(readBuffer) > 0){
+        if (getInputStream().available() > 0 && getInputStream().read(readBuffer) > 0){
             chatArea.appendText(new String(readBuffer, StandardCharsets.UTF_8) + "\n");
         }
     }
