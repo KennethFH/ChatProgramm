@@ -1,17 +1,15 @@
 package at.fhtw.chatprogramm;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 //Serverklasse
 public class Server implements Runnable, SocketAcceptedEvent {
@@ -20,7 +18,7 @@ public class Server implements Runnable, SocketAcceptedEvent {
     private final Stage serverStage = new Stage();
     private final TextArea console = new TextArea();
     private final ConnectionHandler connectionHandler;
-    List<Socket> clients = new ArrayList<>();
+    List<Socket> clients = new CopyOnWriteArrayList<>();
     private boolean isRunning = true;
     private final int buffersize;
 
@@ -50,15 +48,13 @@ public class Server implements Runnable, SocketAcceptedEvent {
     }
 
     @Override
-    public void run(){
-        while (isRunning)
-        {
-            for (int i = 0; i < clients.size(); i++){
-                System.out.println("TEST");
+    public void run() {
+        while (isRunning) {
+            for (int i = 0; i < clients.size(); i++) {
                 readBuffer = new byte[buffersize];
                 try {
-                    if (clients.get(i).getInputStream().available() > 0 && clients.get(i).getInputStream().read(readBuffer) > 0){
-                        for (int o = 0; o < clients.size(); o++){
+                    if (clients.get(i).getInputStream().available() > 0 && clients.get(i).getInputStream().read(readBuffer) > 0) {
+                        for (int o = 0; o < clients.size(); o++) {
                             clients.get(o).getOutputStream().write(readBuffer);
                         }
                     }
